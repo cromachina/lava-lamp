@@ -14,6 +14,11 @@ void main()
 }
 '''
 
+def uniform(prog, key, value):
+    val = prog.get(key, None)
+    if val is not None:
+        val.value = value
+
 class LavaLamp(mglw.WindowConfig):
     gl_version = 4,6
     title = "Lava Lamp"
@@ -61,10 +66,10 @@ class LavaLamp(mglw.WindowConfig):
     def render(self, time: float, frame_time: float):
         self.shape_t += frame_time
         tween.update(frame_time)
-        self.render_program['time'] = self.shape_t
-        self.render_program['color_t'] = self.color_t
-        self.render_program['colors0'] = 0
-        self.render_program['colors1'] = 1
+        uniform(self.render_program, 'time', self.shape_t)
+        uniform(self.render_program, 'color_t', self.color_t)
+        uniform(self.render_program, 'colors0', 0)
+        uniform(self.render_program, 'colors1', 1)
         self.texture0.use(0)
         self.texture1.use(1)
         self.render_vao.render()
