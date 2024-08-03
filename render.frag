@@ -5,7 +5,7 @@ uniform sampler2D colors1;
 
 out vec4 frag_color;
 
-vec2 grad(vec3 v, float eps = 1)
+vec2 grad(vec3 v, float eps)
 {
     float vx = snoise(v + vec3(eps, 0, 0));
     float vy = snoise(v + vec3(0, eps, 0));
@@ -19,7 +19,7 @@ void main()
     vec2 p = (gl_FragCoord.xy) / 200.0;
     for (int i = 2; i <= 4; i++)
     {
-        p += grad(vec3(p / i, t));
+        p += grad(vec3(p / i, t), 1);
     }
     float v = snoise(vec3(p, t)) + 1.0 / 2.0;
     vec4 c0 = texture(colors0, vec2(0, v));
