@@ -5,6 +5,7 @@
     python312
     libGL
     xorg.libX11
+    zlib
   ]);
   runScript = pkgs.writeScript "init.sh" ''
     python -m venv venv

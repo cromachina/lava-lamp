@@ -63,7 +63,7 @@ class LavaLamp(mglw.WindowConfig):
         self.texture0, self.texture1 = self.texture1, self.texture0
         self.texture1.write(self.random_colors())
 
-    def render(self, time: float, frame_time: float):
+    def on_render(self, time: float, frame_time: float):
         self.shape_t += frame_time
         tween.update(frame_time)
         uniform(self.render_program, 'time', self.shape_t)
@@ -74,7 +74,7 @@ class LavaLamp(mglw.WindowConfig):
         self.texture1.use(1)
         self.render_vao.render()
 
-    def key_event(self, key, action, modifiers):
+    def on_key_event(self, key, action, modifiers):
         if action == self.wnd.keys.ACTION_PRESS:
             self.transition()
 
