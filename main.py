@@ -28,6 +28,12 @@ class LavaLamp(mglw.WindowConfig):
     window_size = 800, 800
     aspect_ratio = None
 
+    @classmethod
+    def add_arguments(cls, parser):
+        parser.add_argument('--auto-transition', action='store_true', help='Automatically transition colors.')
+        parser.add_argument('--frequency', type=float, default=60, help='How often a color transition occurs.')
+        parser.add_argument('--time', type=float, default=5, help='How long it takes a color transition to finish.')
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.color_count = 5
@@ -47,6 +53,12 @@ class LavaLamp(mglw.WindowConfig):
         self.color_t = 1
         self.texture0.write(self.random_colors())
         self.texture1.write(self.random_colors())
+        if self.argv.auto_transition:
+            self.auto()
+
+    def auto(self):
+        tween.to([0], 0, 0, self.argv.frequency, 'linear').on_complete(self.auto)
+        self.transition()
 
     def make_tex(self):
         texture = self.ctx.texture(size=(1, self.color_count), components=3, dtype='f4')
@@ -86,10 +98,10 @@ class LavaLamp(mglw.WindowConfig):
 
     def transition(self):
         self.color_t = 0
-        tween_time = 1
+        tween_time = self.argv.time
         ease = 'easeInOutSine'
         tween.to(self, 'color_t', 1, tween_time, ease)
-        tween.to(self, 'shape_t_delta', 1, tween_time / 2, ease).on_complete(
+        tween.to(self, 'shape_t_delta', 1 / tween_time, tween_time / 2, ease).on_complete(
             lambda: tween.to(self, 'shape_t_delta', 0, tween_time / 2, ease)
         )
         self.texture0, self.texture1 = self.texture1, self.texture0
@@ -111,4 +123,4 @@ class LavaLamp(mglw.WindowConfig):
             self.transition()
 
 if __name__ == '__main__':
-    mglw.run_window_config(LavaLamp)
+    LavaLamp.run()
