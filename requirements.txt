@@ -2,3 +2,4 @@ moderngl
 moderngl_window
 numpy
 tween
+opencv-python

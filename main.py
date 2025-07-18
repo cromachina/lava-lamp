@@ -1,5 +1,8 @@
 import pathlib
+import colorsys
+import random
 
+import cv2
 import moderngl as mgl
 import moderngl_window as mglw
 import numpy as np
@@ -45,14 +48,38 @@ class LavaLamp(mglw.WindowConfig):
         self.texture1.write(self.random_colors())
 
     def make_tex(self):
-        texture = self.ctx.texture(size=(1, self.color_count), components=4, dtype='f4')
+        texture = self.ctx.texture(size=(1, self.color_count), components=3, dtype='f4')
         texture.filter = mgl.NEAREST, mgl.NEAREST
         texture.repeat_x = False
         texture.repeat_y = False
         return texture
 
+    # Pastel looking on average.
+    def random_colors_rgb(self):
+        return np.random.random((self.color_count, 3)).astype(np.float32)
+
+    def random_colors_hs_helper(self, hls):
+        index = 1 if hls else 2
+        cvt = cv2.COLOR_HLS2RGB if hls else cv2.COLOR_HSV2RGB
+        colors = self.random_colors_rgb()
+        colors[:,index] = np.linspace(0, 1, self.color_count)
+        colors[:,0] *= 360
+        np.random.shuffle(colors)
+        return cv2.cvtColor(colors.reshape((1, self.color_count, 3)), cvt)
+
+    # Highest contrast and always between black and white.
+    def random_colors_lightness_contrast(self):
+        return self.random_colors_hs_helper(True)
+
+    # Less contrast than lightness, but always has black.
+    def random_colors_value_contrast(self):
+        return self.random_colors_hs_helper(False)
+
     def random_colors(self):
-        return np.random.random((self.color_count, 4)).astype(np.float32)
+        return random.choice([
+            self.random_colors_rgb,
+            self.random_colors_lightness_contrast,
+            self.random_colors_value_contrast])()
 
     def transition(self):
         self.color_t = 0
