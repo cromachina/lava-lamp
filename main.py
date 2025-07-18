@@ -43,6 +43,7 @@ class LavaLamp(mglw.WindowConfig):
         self.render_vao = self.ctx.vertex_array(self.render_program, self.render_buffer, 'position')
 
         self.shape_t = np.random.random() * 10000
+        self.shape_t_delta = 0
         self.color_t = 1
         self.texture0.write(self.random_colors())
         self.texture1.write(self.random_colors())
@@ -63,6 +64,8 @@ class LavaLamp(mglw.WindowConfig):
         cvt = cv2.COLOR_HLS2RGB if hls else cv2.COLOR_HSV2RGB
         colors = self.random_colors_rgb()
         colors[:,index] = np.linspace(0, 1, self.color_count)
+        if random.random() < 0.5:
+            colors[:,0] = random.random()
         colors[:,0] *= 360
         np.random.shuffle(colors)
         return cv2.cvtColor(colors.reshape((1, self.color_count, 3)), cvt)
@@ -83,15 +86,17 @@ class LavaLamp(mglw.WindowConfig):
 
     def transition(self):
         self.color_t = 0
-        tween_time = 1.5
+        tween_time = 1
         ease = 'easeInOutSine'
         tween.to(self, 'color_t', 1, tween_time, ease)
-        tween.to(self, 'shape_t', self.shape_t + 50, tween_time, ease)
+        tween.to(self, 'shape_t_delta', 1, tween_time / 2, ease).on_complete(
+            lambda: tween.to(self, 'shape_t_delta', 0, tween_time / 2, ease)
+        )
         self.texture0, self.texture1 = self.texture1, self.texture0
         self.texture1.write(self.random_colors())
 
     def on_render(self, time: float, frame_time: float):
-        self.shape_t += frame_time
+        self.shape_t += frame_time + self.shape_t_delta
         tween.update(frame_time)
         uniform(self.render_program, 'time', self.shape_t)
         uniform(self.render_program, 'color_t', self.color_t)
