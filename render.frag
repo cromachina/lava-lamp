@@ -1,7 +1,5 @@
 uniform float time;
-uniform float color_t;
-uniform sampler2D colors0;
-uniform sampler2D colors1;
+uniform sampler2D colors;
 
 out vec4 frag_color;
 
@@ -22,7 +20,5 @@ void main()
         p += grad(vec3(p / i, t), 1);
     }
     float v = snoise(vec3(p, t)) + 1.0 / 2.0;
-    vec4 c0 = texture(colors0, vec2(0, v));
-    vec4 c1 = texture(colors1, vec2(0, v));
-    frag_color = mix(c0, c1, color_t);
+    frag_color = texture(colors, vec2(0, v));
 }

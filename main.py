@@ -22,6 +22,9 @@ def uniform(prog, key, value):
     if val is not None:
         val.value = value
 
+def lerp(a, b, t):
+    return (b - a) * t + a
+
 class LavaLamp(mglw.WindowConfig):
     gl_version = 4,6
     title = "Lava Lamp"
@@ -37,8 +40,9 @@ class LavaLamp(mglw.WindowConfig):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.color_count = 5
-        self.texture0 = self.make_tex()
-        self.texture1 = self.make_tex()
+        self.texture = self.make_tex()
+        self.current_color = self.random_colors()
+        self.next_color = self.random_colors()
 
         version = '#version 460'
         noise_lib = pathlib.Path('noise.glsl').read_text()
@@ -51,13 +55,14 @@ class LavaLamp(mglw.WindowConfig):
         self.shape_t = np.random.random() * 10000
         self.shape_t_delta = 0
         self.color_t = 1
-        self.texture0.write(self.random_colors())
-        self.texture1.write(self.random_colors())
+        self.texture.write(self.current_color)
+        uniform(self.render_program, 'colors', 0)
+        self.texture.use(0)
         if self.argv.auto_transition:
-            self.auto()
+            self.auto_transition()
 
-    def auto(self):
-        tween.to([0], 0, 0, self.argv.frequency, 'linear').on_complete(self.auto)
+    def auto_transition(self):
+        tween.to([0], 0, 0, self.argv.frequency, 'linear').on_complete(self.auto_transition)
         self.transition()
 
     def make_tex(self):
@@ -66,6 +71,9 @@ class LavaLamp(mglw.WindowConfig):
         texture.repeat_x = False
         texture.repeat_y = False
         return texture
+
+    def cvt_color(self, colors, conversion_type):
+        return cv2.cvtColor(colors.reshape((1, self.color_count, 3)), conversion_type).reshape((self.color_count, 3))
 
     # Pastel looking on average.
     def random_colors_rgb(self):
@@ -80,7 +88,7 @@ class LavaLamp(mglw.WindowConfig):
             colors[:,0] = random.random()
         colors[:,0] *= 360
         np.random.shuffle(colors)
-        return cv2.cvtColor(colors.reshape((1, self.color_count, 3)), cvt)
+        return self.cvt_color(colors, cvt)
 
     # Highest contrast and always between black and white.
     def random_colors_lightness_contrast(self):
@@ -100,22 +108,24 @@ class LavaLamp(mglw.WindowConfig):
         self.color_t = 0
         tween_time = self.argv.time
         ease = 'easeInOutSine'
-        tween.to(self, 'color_t', 1, tween_time, ease)
+        tween.to(self, 'color_t', 1, tween_time, ease).on_update(self.update_colors)
         tween.to(self, 'shape_t_delta', 1 / tween_time, tween_time / 2, ease).on_complete(
             lambda: tween.to(self, 'shape_t_delta', 0, tween_time / 2, ease)
         )
-        self.texture0, self.texture1 = self.texture1, self.texture0
-        self.texture1.write(self.random_colors())
+        self.current_color = self.next_color
+        self.next_color = self.random_colors()
+
+    def update_colors(self):
+        conv_type = cv2.COLOR_RGB2LAB
+        inv_type = cv2.COLOR_LAB2RGB
+        target_color = lerp(self.cvt_color(self.current_color, conv_type), self.cvt_color(self.next_color, conv_type), self.color_t)
+        target_color = self.cvt_color(target_color, inv_type)
+        self.texture.write(target_color)
 
     def on_render(self, time: float, frame_time: float):
         self.shape_t += frame_time + self.shape_t_delta
         tween.update(frame_time)
         uniform(self.render_program, 'time', self.shape_t)
-        uniform(self.render_program, 'color_t', self.color_t)
-        uniform(self.render_program, 'colors0', 0)
-        uniform(self.render_program, 'colors1', 1)
-        self.texture0.use(0)
-        self.texture1.use(1)
         self.render_vao.render()
 
     def on_key_event(self, key, action, modifiers):
