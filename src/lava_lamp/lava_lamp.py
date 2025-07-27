@@ -132,5 +132,8 @@ class LavaLamp(mglw.WindowConfig):
         if action == self.wnd.keys.ACTION_PRESS:
             self.transition()
 
-if __name__ == '__main__':
+def main():
     LavaLamp.run()
+
+if __name__ == '__main__':
+    main()

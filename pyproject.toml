@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools", "wheel", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lava-lamp"
+version = "1.0.0"
+authors = [
+    { name = "cromachina" }
+]
+license = 'MIT'
+requires-python = ">=3.13"
+dependencies = [
+    'moderngl',
+    'moderngl-window',
+    'numpy',
+    'tween',
+    'opencv-python',
+]
+
+[project.urls]
+"Homepage" = "https://github.com/cromachina/lava-lamp"
+
+[project.scripts]
+art-timelapse = "lava_lamp.lava_lamp:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
