@@ -1,6 +1,7 @@
 import pathlib
 import colorsys
 import random
+import importlib.resources
 
 import cv2
 import moderngl as mgl
@@ -45,8 +46,9 @@ class LavaLamp(mglw.WindowConfig):
         self.next_color = self.random_colors()
 
         version = '#version 460'
-        noise_lib = pathlib.Path('noise.glsl').read_text()
-        frag_shader = pathlib.Path('render.frag').read_text()
+        files = importlib.resources.files(__package__)
+        noise_lib = (files / 'noise.glsl').read_text()
+        frag_shader = (files/ 'render.frag').read_text()
 
         self.render_program = self.ctx.program(vertex_shader=render_vert, fragment_shader='\n'.join([version, noise_lib, frag_shader]))
         self.render_buffer = self.ctx.buffer(np.array([[-1, -1], [3, -1], [-1, 3]], dtype=np.float32))

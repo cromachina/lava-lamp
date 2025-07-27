@@ -22,7 +22,7 @@ dependencies = [
 "Homepage" = "https://github.com/cromachina/lava-lamp"
 
 [project.scripts]
-art-timelapse = "lava_lamp.lava_lamp:main"
+lava-lamp = "lava_lamp.lava_lamp:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
